@@ -20,9 +20,41 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
+// Карт ачаалж байх үед харагдах Skeleton компонент
+function LoanSkeleton() {
+  return (
+    <div className="h-[210px] w-full animate-pulse rounded-xl border-2 border-slate-100 bg-slate-50/50 dark:border-slate-800 dark:bg-slate-900/20">
+      <div className="p-5 space-y-5">
+        <div className="flex justify-between">
+          <div className="space-y-2">
+            <div className="h-3 w-16 bg-slate-200 dark:bg-slate-800 rounded" />
+            <div className="h-5 w-40 bg-slate-300 dark:bg-slate-700 rounded" />
+          </div>
+          <div className="h-6 w-20 bg-slate-200 dark:bg-slate-800 rounded-full" />
+        </div>
+        <div className="space-y-4 pt-2">
+          <div className="flex justify-between">
+            <div className="h-4 w-16 bg-slate-100 dark:bg-slate-800 rounded" />
+            <div className="h-4 w-28 bg-slate-200 dark:bg-slate-800 rounded" />
+          </div>
+          <div className="flex justify-between">
+            <div className="h-4 w-16 bg-slate-100 dark:bg-slate-800 rounded" />
+            <div className="h-4 w-24 bg-slate-200 dark:bg-slate-800 rounded" />
+          </div>
+          <div className="flex justify-between">
+            <div className="h-4 w-16 bg-slate-100 dark:bg-slate-800 rounded" />
+            <div className="h-4 w-24 bg-slate-200 dark:bg-slate-800 rounded" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function LoanTrackerPage() {
   const [loans, setLoans] = useState<Loan[]>([]);
   const [filteredLoans, setFilteredLoans] = useState<Loan[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const getToday = () => {
     const now = new Date();
@@ -78,10 +110,10 @@ export default function LoanTrackerPage() {
   };
 
   const handleCreateLoan = async (loan: Loan) => {
-    const response = await axiosInstance.post("/loan", loan);
-    const updated = sortLoans([response.data, ...loans]);
+    const updated = sortLoans([loan, ...loans]);
     setLoans(updated);
     setFilteredLoans(updated);
+    await axiosInstance.post("/loan", loan);
   };
 
   const handleUpdateLoan = (updatedLoan: Loan) => {
@@ -133,10 +165,17 @@ export default function LoanTrackerPage() {
 
   useEffect(() => {
     const getLoans = async () => {
-      const response = await axiosInstance.get("/loan");
-      const sorted = sortLoans(response.data);
-      setLoans(sorted);
-      setFilteredLoans(sorted);
+      try {
+        setIsLoading(true);
+        const response = await axiosInstance.get("/loan");
+        const sorted = sortLoans(response.data);
+        setLoans(sorted);
+        setFilteredLoans(sorted);
+      } catch (error) {
+        console.error("Дата татахад алдаа гарлаа:", error);
+      } finally {
+        setIsLoading(false);
+      }
     };
     getLoans();
   }, []);
@@ -160,31 +199,45 @@ export default function LoanTrackerPage() {
                 <span className="text-[10px] font-black text-muted-foreground uppercase">
                   Хүлээгдэж буй
                 </span>
-                <span className="text-2xl font-black">{stats.pending}</span>
+                <span className="text-2xl font-black">
+                  {isLoading ? (
+                    <span className="animate-pulse">...</span>
+                  ) : (
+                    stats.pending
+                  )}
+                </span>
               </div>
               <div className="flex flex-col border-l-4 border-green-600 pl-4">
                 <span className="text-[10px] font-black text-green-600 uppercase">
                   Төлөгдсөн
                 </span>
                 <span className="text-2xl font-black text-green-600">
-                  {stats.paid}
+                  {isLoading ? (
+                    <span className="animate-pulse">...</span>
+                  ) : (
+                    stats.paid
+                  )}
                 </span>
               </div>
               <div
                 className={`flex flex-col border-l-4 border-red-600 pl-4 ${
-                  stats.overdue > 0 ? "animate-pulse" : ""
+                  !isLoading && stats.overdue > 0 ? "animate-pulse" : ""
                 }`}
               >
                 <span className="text-[10px] font-black text-red-600 uppercase">
                   Хугацаа хэтэрсэн
                 </span>
                 <span className="text-2xl font-black text-red-600">
-                  {stats.overdue}
+                  {isLoading ? (
+                    <span className="animate-pulse">...</span>
+                  ) : (
+                    stats.overdue
+                  )}
                 </span>
               </div>
             </div>
 
-            {stats.paid > 0 && (
+            {!isLoading && stats.paid > 0 && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button
@@ -228,17 +281,28 @@ export default function LoanTrackerPage() {
           </div>
           <div className="space-y-4">
             <h2 className="text-xl font-bold uppercase tracking-tight">
-              Идэвхтэй зээлүүд ({filteredLoans.length})
+              Идэвхтэй зээлүүд ({isLoading ? "..." : filteredLoans.length})
             </h2>
             <div className="grid gap-4 md:grid-cols-2">
-              {filteredLoans.map((loan) => (
-                <LoanCard
-                  key={loan._id}
-                  loan={loan}
-                  onUpdate={handleUpdateLoan}
-                  onDelete={handleDeleteLoan}
-                />
-              ))}
+              {isLoading ? (
+                // Ачаалж байх үед 4 ширхэг skeleton харуулна
+                Array.from({ length: 4 }).map((_, i) => (
+                  <LoanSkeleton key={i} />
+                ))
+              ) : filteredLoans.length > 0 ? (
+                filteredLoans.map((loan) => (
+                  <LoanCard
+                    key={loan._id}
+                    loan={loan}
+                    onUpdate={handleUpdateLoan}
+                    onDelete={handleDeleteLoan}
+                  />
+                ))
+              ) : (
+                <div className="col-span-full py-12 text-center text-muted-foreground italic border-2 border-dashed rounded-xl">
+                  Бүртгэлтэй зээл олдсонгүй.
+                </div>
+              )}
             </div>
           </div>
         </div>

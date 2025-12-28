@@ -92,7 +92,7 @@ export function LoanCard({
       case "Overdue":
         return "Хугацаа хэтэрсэн";
       default:
-        return "Хугацаа хэтэрсэн";
+        return "Хүлээгдэж буй";
     }
   };
 
