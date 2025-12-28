@@ -39,8 +39,8 @@ export function LoanForm({
       amount: Number.parseFloat(formData.amount),
       phoneNumber: formData.phone,
       dueDate: formData.dueDate,
-      dateTaken: new Date().toISOString().split("T")[0],
-      status: "active",
+      createdAt: new Date().toISOString().split("T")[0],
+      status: "Pending",
     };
 
     onCreateLoan(newLoan);
@@ -50,16 +50,18 @@ export function LoanForm({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Create New Loan</CardTitle>
-        <CardDescription>Add a new loan entry to track</CardDescription>
+        <CardTitle>Шинэ зээл бүртгэх</CardTitle>
+        <CardDescription>
+          Шинээр олгосон зээлийн мэдээллийг энд оруулна уу
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Name</Label>
+            <Label htmlFor="name">Зээлдэгчийн нэр</Label>
             <Input
               id="name"
-              placeholder="John Doe"
+              placeholder="Жишээ: Бат-Эрдэнэ"
               value={formData.name}
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
@@ -69,10 +71,10 @@ export function LoanForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="company">Company</Label>
+            <Label htmlFor="company">Байгууллага / Компани</Label>
             <Input
               id="company"
-              placeholder="Acme Corp"
+              placeholder="Компанийн нэр"
               value={formData.company}
               onChange={(e) =>
                 setFormData({ ...formData, company: e.target.value })
@@ -82,12 +84,12 @@ export function LoanForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="amount">Amount ($)</Label>
+            <Label htmlFor="amount">Зээлийн дүн (₮)</Label>
             <Input
               id="amount"
               type="number"
               step="0.01"
-              placeholder="5000"
+              placeholder="500,000"
               value={formData.amount}
               onChange={(e) =>
                 setFormData({ ...formData, amount: e.target.value })
@@ -97,11 +99,11 @@ export function LoanForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="phone">Phone Number</Label>
+            <Label htmlFor="phone">Утасны дугаар</Label>
             <Input
               id="phone"
               type="tel"
-              placeholder="+1 (555) 000-0000"
+              placeholder="88xxxxxx"
               value={formData.phone}
               onChange={(e) =>
                 setFormData({ ...formData, phone: e.target.value })
@@ -111,7 +113,7 @@ export function LoanForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="dueDate">Due Date</Label>
+            <Label htmlFor="dueDate">Төлөх эцсийн хугацаа</Label>
             <Input
               id="dueDate"
               type="date"
@@ -123,9 +125,9 @@ export function LoanForm({
             />
           </div>
 
-          <Button type="submit" className="w-full">
+          <Button type="submit" className="w-full font-bold">
             <Plus className="mr-2 size-4" />
-            Create Loan
+            Зээл бүртгэх
           </Button>
         </form>
       </CardContent>

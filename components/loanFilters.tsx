@@ -38,17 +38,17 @@ export function LoanFilters({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Filter Loans</CardTitle>
-        <CardDescription>Search and filter by date range</CardDescription>
+        <CardTitle>Шүүлтүүр</CardTitle>
+        <CardDescription>Нэр, дугаар болон хугацаагаар шүүх</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="search">Search</Label>
+          <Label htmlFor="search">Хайх</Label>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               id="search"
-              placeholder="Name or phone..."
+              placeholder="Нэр эсвэл утас..."
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
@@ -60,7 +60,7 @@ export function LoanFilters({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="startDate">Start Date</Label>
+          <Label htmlFor="startDate">Эхлэх огноо</Label>
           <Input
             id="startDate"
             type="date"
@@ -73,7 +73,7 @@ export function LoanFilters({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="endDate">End Date</Label>
+          <Label htmlFor="endDate">Дуусах огноо</Label>
           <Input
             id="endDate"
             type="date"
@@ -87,7 +87,7 @@ export function LoanFilters({
 
         <div className="rounded-lg border border-border bg-muted/50 p-3">
           <p className="text-sm text-muted-foreground">
-            Total Loans:{" "}
+            Нийт зээл:{" "}
             <span className="font-semibold text-foreground">{totalLoans}</span>
           </p>
         </div>

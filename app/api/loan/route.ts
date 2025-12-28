@@ -23,6 +23,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     delete body._id;
+    delete body.createdAt;
     const newLoan = await Loan.create({ ...body, status: "Pending" });
     return NextResponse.json(newLoan, { status: 201 });
   } catch (error) {
