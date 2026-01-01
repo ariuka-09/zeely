@@ -27,6 +27,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import type { Loan } from "@/types/loan";
 import {
   Building2,
@@ -37,6 +44,7 @@ import {
   Pencil,
   Trash2,
   Check,
+  FileText,
 } from "lucide-react";
 
 export function LoanCard({
@@ -84,7 +92,6 @@ export function LoanCard({
 
   const activeStatus = isOverdue ? "Overdue" : loan.status;
 
-  // Logic for the badge label in Mongolian
   const getStatusLabel = (status: string) => {
     switch (status) {
       case "Paid":
@@ -183,7 +190,6 @@ export function LoanCard({
                     ? "Pending болгох"
                     : "Төлөгдсөн болгох"}
                 </DropdownMenuItem>
-
                 <AlertDialogTrigger asChild>
                   <DropdownMenuItem className="text-destructive focus:bg-destructive focus:text-destructive-foreground">
                     <Trash2 className="mr-2 size-4" />
@@ -198,14 +204,14 @@ export function LoanCard({
                 <AlertDialogTitle>Та итгэлтэй байна уу?</AlertDialogTitle>
                 <AlertDialogDescription>
                   <strong>{loan.name}</strong>-ийн зээлийн бүртгэлийг бүрмөсөн
-                  устгах гэж байна. Энэ үйлдлийг буцаах боломжгүй.
+                  устгах гэж байна.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Болих</AlertDialogCancel>
                 <AlertDialogAction
                   onClick={() => onDelete(loan._id as string)}
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  className="bg-destructive hover:bg-destructive/90"
                 >
                   Устгах
                 </AlertDialogAction>
@@ -249,43 +255,57 @@ export function LoanCard({
             <Phone className="size-4" />
             <span>Утас</span>
           </div>
-          {isEditing ? (
-            <Input
-              value={editData.phoneNumber}
-              onChange={(e) =>
-                setEditData({ ...editData, phoneNumber: e.target.value })
-              }
-              className="h-8 w-40 text-right"
-            />
-          ) : (
-            <span className="font-mono font-bold">{loan.phoneNumber}</span>
-          )}
+          <span className="font-mono font-bold">{loan.phoneNumber}</span>
         </div>
 
         <div className="flex items-center justify-between text-sm">
           <div className="flex items-center gap-2 text-muted-foreground">
             <Calendar className="size-4" />
-            <span>Дуусах хугацаа</span>
+            <span>Хугацаа</span>
           </div>
-          {isEditing ? (
-            <Input
-              type="date"
-              value={
-                typeof editData.dueDate === "string"
-                  ? editData.dueDate
-                  : new Date(editData.dueDate).toISOString().split("T")[0]
-              }
-              onChange={(e) =>
-                setEditData({ ...editData, dueDate: e.target.value })
-              }
-              className="h-8 w-40"
-            />
-          ) : (
-            <span className={`font-bold ${isOverdue ? "text-red-600" : ""}`}>
-              {new Date(loan.dueDate).toLocaleDateString()}
-            </span>
-          )}
+          <span className={`font-bold ${isOverdue ? "text-red-600" : ""}`}>
+            {new Date(loan.dueDate).toLocaleDateString()}
+          </span>
         </div>
+
+        {/* --- RECEIPT SECTION --- */}
+        {loan.receipt && (
+          <div className="pt-3 border-t mt-2">
+            <div className="flex items-center justify-between mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              <div className="flex items-center gap-1">
+                <FileText className="size-3" />
+                <span>Төлбөрийн баримт</span>
+              </div>
+            </div>
+
+            <Dialog>
+              <DialogTrigger asChild>
+                <div className="group relative cursor-pointer overflow-hidden rounded-md border bg-slate-100 aspect-[4/1] flex items-center justify-center hover:bg-slate-200 transition-colors">
+                  <img
+                    src={loan.receipt}
+                    alt="Receipt thumbnail"
+                    className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
+                  />
+                  {/* Icon removed for a cleaner look as requested */}
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-all" />
+                </div>
+              </DialogTrigger>
+              <DialogContent className="max-w-3xl p-1 bg-transparent border-none shadow-none flex flex-col items-center justify-center">
+                <DialogHeader>
+                  {/* Accessibility Title hidden from sight but available for screen readers */}
+                  <DialogTitle className="sr-only">
+                    Төлбөрийн баримт: {loan.name}
+                  </DialogTitle>
+                </DialogHeader>
+                <img
+                  src={loan.receipt}
+                  alt="Receipt full size"
+                  className="max-h-[85vh] w-auto rounded-lg shadow-2xl object-contain bg-white"
+                />
+              </DialogContent>
+            </Dialog>
+          </div>
+        )}
       </CardContent>
 
       {isEditing && (

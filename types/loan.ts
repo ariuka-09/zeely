@@ -6,5 +6,6 @@ export interface Loan {
   phoneNumber: string;
   dueDate: string;
   createdAt: string;
+  receipt: string;
   status: "Pending" | "Paid" | "Overdue";
 }

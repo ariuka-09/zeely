@@ -37,6 +37,9 @@ const LoanSchema: Schema = new Schema(
       type: Number,
       required: true,
     },
+    receipt: {
+      type: String,
+    },
   },
   {
     timestamps: true,
