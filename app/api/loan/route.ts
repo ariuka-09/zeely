@@ -24,9 +24,13 @@ function failure(action: string, error: unknown) {
     );
   }
 
-  // The error class is safe to expose; the message is not.
+  const message =
+    error instanceof Error
+      ? error.message.replace(/mongodb(\+srv)?:\/\/\S*/gi, "<redacted>")
+      : "";
+
   return NextResponse.json(
-    { error: `${action} failed`, type: name },
+    { error: `${action} failed`, type: name, message },
     { status: 500 }
   );
 }
