@@ -24,7 +24,11 @@ function failure(action: string, error: unknown) {
     );
   }
 
-  return NextResponse.json({ error: `${action} failed` }, { status: 500 });
+  // The error class is safe to expose; the message is not.
+  return NextResponse.json(
+    { error: `${action} failed`, type: name },
+    { status: 500 }
+  );
 }
 
 // =========================================================
