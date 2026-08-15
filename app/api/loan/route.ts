@@ -17,6 +17,17 @@ function failure(action: string, error: unknown) {
   }
 
   const name = error instanceof Error ? error.name : "";
+  const message = error instanceof Error ? error.message : "";
+
+  // A dead or renamed Atlas cluster fails the SRV lookup, which mongoose
+  // rethrows as a plain Error - so match on the message, not the class.
+  if (/^querySrv |ENOTFOUND|EAI_AGAIN/.test(message)) {
+    return NextResponse.json(
+      { error: "Database host not found - check MONGODB_URL" },
+      { status: 503 }
+    );
+  }
+
   if (name === "MongooseServerSelectionError" || name === "MongoServerError") {
     return NextResponse.json(
       { error: `Database unreachable (${name})` },
@@ -24,13 +35,9 @@ function failure(action: string, error: unknown) {
     );
   }
 
-  const message =
-    error instanceof Error
-      ? error.message.replace(/mongodb(\+srv)?:\/\/\S*/gi, "<redacted>")
-      : "";
-
+  // The error class is safe to expose; the message can carry the host or URI.
   return NextResponse.json(
-    { error: `${action} failed`, type: name, message },
+    { error: `${action} failed`, type: name },
     { status: 500 }
   );
 }
