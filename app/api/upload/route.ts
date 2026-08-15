@@ -8,17 +8,18 @@ export async function POST(request: Request): Promise<NextResponse> {
     const jsonResponse = await handleUpload({
       body,
       request,
-      onBeforeGenerateToken: async (pathname) => {
+      onBeforeGenerateToken: async () => {
         // Optional: Check user session here to see if they are allowed to upload
         return {
-          allowedContentTypes: ["image/jpeg", "image/png", "video/mp4"],
-          tokenPayload: JSON.stringify({ userId: "user_123" }),
+          // The form accepts any image, so don't reject HEIC/webp/gif here.
+          allowedContentTypes: ["image/*"],
+          // Without a random suffix, a second receipt named e.g. IMG_0001.jpg
+          // collides with the first one and the upload is rejected.
+          addRandomSuffix: true,
+          maximumSizeInBytes: 10 * 1024 * 1024,
         };
       },
-      onUploadCompleted: async ({ blob, tokenPayload }) => {
-        // Optional: Update your database with the new blob.url
-        console.log("Upload finished!", blob.url);
-      },
+      onUploadCompleted: async () => {},
     });
 
     return NextResponse.json(jsonResponse);

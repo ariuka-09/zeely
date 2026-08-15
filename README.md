@@ -1,5 +1,16 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Environment variables
+
+Set these locally in `.env.local`, and in the Vercel project settings before deploying:
+
+| Variable | Used by |
+| --- | --- |
+| `MONGODB_URL` | MongoDB connection string for the loan API |
+| `BLOB_READ_WRITE_TOKEN` | Vercel Blob, for receipt uploads |
+
+Run the backend tests with `npm test`.
+
 ## Getting Started
 
 First, run the development server:

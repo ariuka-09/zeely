@@ -1,16 +1,18 @@
 import { Loan } from "@/utils/models/loanSchema";
 import connectDB from "@/utils/mongodb";
+import { stripImmutable } from "@/utils/stripImmutable";
 import { NextRequest, NextResponse } from "next/server";
 
 // =========================================================
 // 1. GET - Fetch all loans
 // =========================================================
 export async function GET() {
-  await connectDB();
   try {
+    await connectDB();
     const loans = await Loan.find({}).sort({ createdAt: -1 });
     return NextResponse.json(loans);
   } catch (error) {
+    console.error("Fetch Error:", error);
     return NextResponse.json({ error: "Failed to fetch" }, { status: 500 });
   }
 }
@@ -19,18 +21,17 @@ export async function GET() {
 // 2. POST - Create a new loan
 // =========================================================
 export async function POST(req: NextRequest) {
-  await connectDB();
   try {
+    await connectDB();
     const body = await req.json();
-    delete body._id;
-    delete body.createdAt;
-    const newLoan = await Loan.create({ ...body, status: "Pending" });
+    const newLoan = await Loan.create({
+      ...stripImmutable(body),
+      status: "Pending",
+    });
     return NextResponse.json(newLoan, { status: 201 });
   } catch (error) {
-    return NextResponse.json(
-      { message: "Create failed", error },
-      { status: 500 }
-    );
+    console.error("Create Error:", error);
+    return NextResponse.json({ error: "Create failed" }, { status: 500 });
   }
 }
 
@@ -38,8 +39,6 @@ export async function POST(req: NextRequest) {
 // 3. PATCH - Update ANY field using ?id=[id]
 // =========================================================
 export async function PATCH(req: NextRequest) {
-  await connectDB();
-
   // 1. Get the ID from the URL
   const { searchParams } = new URL(req.url);
   const id = searchParams.get("id");
@@ -49,8 +48,10 @@ export async function PATCH(req: NextRequest) {
   }
 
   try {
+    await connectDB();
+
     // 2. Get the update data from the request body
-    const updates = await req.json();
+    const updates = stripImmutable(await req.json());
 
     // 3. Find and Update
     // { new: true } returns the document AFTER the changes are applied
@@ -66,12 +67,9 @@ export async function PATCH(req: NextRequest) {
     }
 
     return NextResponse.json(updatedLoan);
-  } catch (error: any) {
+  } catch (error) {
     console.error("Update Error:", error);
-    return NextResponse.json(
-      { error: "Update failed", details: error.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Update failed" }, { status: 500 });
   }
 }
 
@@ -79,7 +77,6 @@ export async function PATCH(req: NextRequest) {
 // 4. DELETE - Remove loan using ?id=[id]
 // =========================================================
 export async function DELETE(req: NextRequest) {
-  await connectDB();
   const { searchParams } = new URL(req.url);
   const id = searchParams.get("id");
 
@@ -88,9 +85,16 @@ export async function DELETE(req: NextRequest) {
   }
 
   try {
-    await Loan.findByIdAndDelete(id);
+    await connectDB();
+    const deleted = await Loan.findByIdAndDelete(id);
+
+    if (!deleted) {
+      return NextResponse.json({ error: "Loan not found" }, { status: 404 });
+    }
+
     return NextResponse.json({ message: "Loan deleted" });
   } catch (error) {
+    console.error("Delete Error:", error);
     return NextResponse.json({ error: "Delete failed" }, { status: 500 });
   }
 }

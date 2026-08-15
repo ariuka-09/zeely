@@ -1,56 +1,39 @@
-import mongoose from "mongoose";
+import mongoose, { type Mongoose } from "mongoose";
 
-// console.log(MONGODB_URI, "URI");
-
-mongoose.set({ bufferCommands: false });
-
-const MONGODB_URI = process.env.MONGODB_URL;
-
-if (!MONGODB_URI) {
-  throw new Error(
-    "Please define the MONGODB_URL environment variable inside .env.local"
-  );
-}
+mongoose.set("bufferCommands", false);
 
 declare global {
-  var mongoose:
-    | {
-        conn: typeof mongoose | null;
-        promise: Promise<typeof mongoose> | null;
-      }
+  var mongooseCache:
+    | { conn: Mongoose | null; promise: Promise<Mongoose> | null }
     | undefined;
 }
 
-let cached = global.mongoose;
-
-if (!cached) {
-  cached = global.mongoose = { conn: null, promise: null };
-}
+const cached = (global.mongooseCache ??= { conn: null, promise: null });
 
 async function connectDB() {
-  if (cached!.conn) {
-    return cached!.conn;
+  if (cached.conn) {
+    return cached.conn;
   }
 
-  if (!cached!.promise) {
-    const opts = {
-      bufferCommands: false,
-    };
+  // Read the env var at request time, not module load time: throwing during
+  // module evaluation breaks `next build` page-data collection.
+  const MONGODB_URI = process.env.MONGODB_URL;
 
-    // @ts-ignore - Type issue with mongoose connection caching
-    cached!.promise = mongoose.connect(MONGODB_URI!, opts);
+  if (!MONGODB_URI) {
+    throw new Error(
+      "Please define the MONGODB_URL environment variable inside .env.local"
+    );
+  }
+
+  if (!cached.promise) {
+    cached.promise = mongoose.connect(MONGODB_URI, { bufferCommands: false });
   }
 
   try {
-    const mongooseInstance = await cached!.promise;
-    cached!.conn = mongooseInstance;
-    console.log("connection successful");
-
-    return mongooseInstance;
+    cached.conn = await cached.promise;
+    return cached.conn;
   } catch (e) {
-    console.log("FAILED TO CONNECT DB", e, MONGODB_URI);
-
-    cached!.promise = null;
+    cached.promise = null;
     throw e;
   }
 }

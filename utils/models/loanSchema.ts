@@ -1,15 +1,16 @@
-import mongoose, { Schema, model, models, Model } from "mongoose";
+import { Schema, model, models, Model } from "mongoose";
 
 interface ILoan {
   name: string;
-  companyName: string;
+  company: string;
   phoneNumber: string;
-  payBackDate: Date;
+  dueDate: Date;
   amount: number;
-  status: string;
+  status: "Pending" | "Paid" | "Overdue";
+  receipt?: string;
 }
 
-const LoanSchema: Schema = new Schema(
+const LoanSchema = new Schema<ILoan>(
   {
     name: {
       type: String,
@@ -46,4 +47,5 @@ const LoanSchema: Schema = new Schema(
   }
 );
 
-export const Loan = (models.Loan as Model<ILoan>) || model("Loan", LoanSchema);
+export const Loan =
+  (models.Loan as Model<ILoan>) || model<ILoan>("Loan", LoanSchema);
