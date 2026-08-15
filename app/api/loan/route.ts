@@ -3,6 +3,30 @@ import connectDB from "@/utils/mongodb";
 import { stripImmutable } from "@/utils/stripImmutable";
 import { NextRequest, NextResponse } from "next/server";
 
+// A 500 with no detail is impossible to debug from the client, and the raw
+// driver error can carry the connection string. Report the config problems
+// (which are the common ones) and keep the rest generic.
+function failure(action: string, error: unknown) {
+  console.error(`${action} Error:`, error);
+
+  if (!process.env.MONGODB_URL) {
+    return NextResponse.json(
+      { error: "Server is misconfigured: MONGODB_URL is not set" },
+      { status: 503 }
+    );
+  }
+
+  const name = error instanceof Error ? error.name : "";
+  if (name === "MongooseServerSelectionError" || name === "MongoServerError") {
+    return NextResponse.json(
+      { error: `Database unreachable (${name})` },
+      { status: 503 }
+    );
+  }
+
+  return NextResponse.json({ error: `${action} failed` }, { status: 500 });
+}
+
 // =========================================================
 // 1. GET - Fetch all loans
 // =========================================================
@@ -12,8 +36,7 @@ export async function GET() {
     const loans = await Loan.find({}).sort({ createdAt: -1 });
     return NextResponse.json(loans);
   } catch (error) {
-    console.error("Fetch Error:", error);
-    return NextResponse.json({ error: "Failed to fetch" }, { status: 500 });
+    return failure("Fetch", error);
   }
 }
 
@@ -30,8 +53,7 @@ export async function POST(req: NextRequest) {
     });
     return NextResponse.json(newLoan, { status: 201 });
   } catch (error) {
-    console.error("Create Error:", error);
-    return NextResponse.json({ error: "Create failed" }, { status: 500 });
+    return failure("Create", error);
   }
 }
 
@@ -68,8 +90,7 @@ export async function PATCH(req: NextRequest) {
 
     return NextResponse.json(updatedLoan);
   } catch (error) {
-    console.error("Update Error:", error);
-    return NextResponse.json({ error: "Update failed" }, { status: 500 });
+    return failure("Update", error);
   }
 }
 
@@ -94,7 +115,6 @@ export async function DELETE(req: NextRequest) {
 
     return NextResponse.json({ message: "Loan deleted" });
   } catch (error) {
-    console.error("Delete Error:", error);
-    return NextResponse.json({ error: "Delete failed" }, { status: 500 });
+    return failure("Delete", error);
   }
 }
